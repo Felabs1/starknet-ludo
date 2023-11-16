@@ -56,10 +56,11 @@ trait IStarkDice<TContractState> {
 
 #[starknet::interface]
 trait IHelperDice<TContractState> {
-    fn get_games(self: @TContractState) -> Array<Game>;
-    fn get_game(self: @TContractState, game_id: u256) -> Game;
-    fn get_player_rewards(self: @TContractState, player_id: ContractAddress) -> Array<GameReward>;
-    fn get_player_games(self: @TContractState, player_id: ContractAddress) -> Array<Game>;
+    // fn get_games(self: @TContractState) -> Array<Game>;
+    // fn get_game(self: @TContractState, game_id: u256) -> Game;
+    // fn get_player_rewards(self: @TContractState, player_id: ContractAddress) -> Array<GameReward>;
+    // fn get_player_games(self: @TContractState, player_id: ContractAddress) -> Array<Game>;
+    fn get_players_count(self: @TContractState) -> u256;
 }
 #[starknet::contract]
 mod StarkDice {
@@ -94,6 +95,12 @@ mod StarkDice {
     // }
 
     // 0x2964055388b946b47b1b6c16c5abbecee9d6e661bb61b3377c005321baced55
+    #[external(v0)]
+    impl IHelperDiceImpl of super::IHelperDice<ContractState> {
+        fn get_players_count(self: @ContractState) -> u256{
+            self.players_count.read()
+        }
+    }
 
     #[external(v0)]
     impl IStarkDiceImpl of super::IStarkDice<ContractState> {

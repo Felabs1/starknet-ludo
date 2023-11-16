@@ -1,43 +1,35 @@
-use starknet::ContractAddress;
+use starkdice::IHelperDiceDispatcherTrait;
+use starkdice::IStarkDiceDispatcherTrait;
+use core::array::ArrayTrait;
+use core::traits::Into;
+use core::debug::PrintTrait;
+use core::option::OptionTrait;
+use core::traits::TryInto;
+use starkdice::{IHelperDiceDispatcher, IStarkDiceDispatcher};
+// use cycle_stark::interfaces::{
+//     ICycleStarkDispatcherTrait, ICycleStarkDispatcher, IHelperFunctionsDispatcher
+// };
+use snforge_std::{declare, ContractClassTrait, start_prank, stop_prank};
+use starknet::testing::{set_caller_address};
+use starknet::{contract_address_const, ContractAddress};
+// use cycle_stark::erc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 
-use snforge_std::{declare, ContractClassTrait};
+fn deploy() -> (IStarkDiceDispatcher,IHelperDiceDispatcher, ContractAddress) {
+    // Declare and deploy a contract
+    let contract = declare('StarkDice');
+    let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
 
-use starkdice::IHelloStarknetSafeDispatcher;
-use starkdice::IHelloStarknetSafeDispatcherTrait;
+    // Create a Dispatcher object for interaction with the deployed contract
+    let main_dispatcher = IStarkDiceDispatcher { contract_address };
+    let helper_dispatcher = IHelperDiceDispatcher { contract_address };
 
-fn deploy_contract(name: felt252) -> ContractAddress {
-    let contract = declare(name);
-    contract.deploy(@ArrayTrait::new()).unwrap()
+    (main_dispatcher,helper_dispatcher, contract_address)
 }
 
 #[test]
-fn test_increase_balance() {
-    let contract_address = deploy_contract('HelloStarknet');
+fn register_hero() {
+    let (main_dispatcher,helper_dispatcher, contract_address) = deploy();
+    main_dispatcher.register_player('felabs');
+    assert(helper_dispatcher.get_players_count() == 1, 'some error occured');
 
-    let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
-
-    let balance_before = safe_dispatcher.get_balance().unwrap();
-    assert(balance_before == 0, 'Invalid balance');
-
-    safe_dispatcher.increase_balance(42).unwrap();
-
-    let balance_after = safe_dispatcher.get_balance().unwrap();
-    assert(balance_after == 42, 'Invalid balance');
-}
-
-#[test]
-fn test_cannot_increase_balance_with_zero_value() {
-    let contract_address = deploy_contract('HelloStarknet');
-
-    let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
-
-    let balance_before = safe_dispatcher.get_balance().unwrap();
-    assert(balance_before == 0, 'Invalid balance');
-
-    match safe_dispatcher.increase_balance(0) {
-        Result::Ok(_) => panic_with_felt252('Should have panicked'),
-        Result::Err(panic_data) => {
-            assert(*panic_data.at(0) == 'Amount cannot be 0', *panic_data.at(0));
-        }
-    };
 }

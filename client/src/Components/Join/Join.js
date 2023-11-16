@@ -2,12 +2,30 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import "./Join.css";
+import { Contract, Provider, constants } from "starknet";
+import { connect, disconnect } from "starknetkit";
 
 function Join({ socket, history }) {
   const [name, setName] = useState("");
   const [room, setRoom] = useState("");
+  const [connection, setConnection] = useState();
+  const [account, setAccount] = useState();
+  const [address, setAddress] = useState();
+  const [retrievedValue, setRetrievedValue] = useState("");
+
   let uid = uuid().slice(0, 8);
   const inputRef = React.useRef();
+
+  const connectWallet = async () => {
+    const connection_ = await connect({
+      webWalletUrl: "https://web.argent.xyz",
+    });
+    if (connection_ && connection_.isConnected) {
+      setConnection(connection_);
+      setAccount(connection_.account);
+      setAddress(connection_.selectedAddress);
+    }
+  };
 
   function handleClick(e) {
     let roomId,
@@ -38,6 +56,7 @@ function Join({ socket, history }) {
     <div className="joinOuterContainer">
       <div className="joinInnerContainer">
         <button
+          onclick="connectWallet"
           style={{
             marginTop: "-20px",
             display: "block",
